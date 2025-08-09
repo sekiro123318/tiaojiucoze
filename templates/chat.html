@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI调酒师</title>
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .chat-container {
+            max-width: 800px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            padding: 20px;
+        }
+        .chat-header {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            margin-bottom: 20px;
+        }
+        .chat-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(to right, #f7b733, #fc4a1a);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+        }
+        .chat-title {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .chat-status {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+        }
+        .chat-status-dot {
+            width: 10px;
+            height: 10px;
+            background-color: #00ff00;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .chat-history {
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+        .message {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .user-message {
+            justify-content: flex-end;
+        }
+        .ai-message {
+            justify-content: flex-start;
+        }
+        .message-content {
+            max-width: 70%;
+            padding: 10px;
+            border-radius: 10px;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .user-message .message-content {
+            background-color: #1e90ff;
+            color: #fff;
+        }
+        .ai-message .message-content {
+            background-color: rgba(0, 0, 0, 0.5);
+            color: #fff;
+        }
+        .chat-input {
+            display: flex;
+            gap: 10px;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background: linear-gradient(to right, #f7b733, #fc4a1a);
+            color: #fff;
+            cursor: pointer;
+        }
+        .chat-image {
+            max-width: 200px;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+        .bot-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(to right, #f7b733, #fc4a1a);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+        }
+        .bot-message {
+            display: flex;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="chat-avatar">
+                <img src="{{ url_for('static', filename='jiweijiu.png') }}"alt="AI调酒师头像" width="40" height="40" />
+            </div>
+            <div class="chat-title">AI调酒师</div>
+            <div class="chat-status">
+                <div class="chat-status-dot"></div>
+                <div>在线并准备为您服务</div>
+            </div>
+        </div>
+        <div class="chat-history" id="history">
+            <div class="message ai-message">
+                <div class="bot-message">
+                    <div class="bot-avatar">
+                        <img src="{{ url_for('static', filename='jiweijiu.png') }}" alt="AI调酒师头像" width="40" height="40" />
+                    </div>
+                    <div class="message-content">
+                        <p>您好！我是您的AI调酒师。我可以帮您发现新的鸡尾酒，根据您的喜好推荐饮品，或回答任何关于调酒的问题。今天我能为您做些什么？</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="input" placeholder="输入你的消息...">
+            <button onclick="sendMessage()">发送</button>
+        </div>
+    </div>
+
+    <script>
+        function appendMessage(sender, text, imageUrl) {
+            const history = document.getElementById('history');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            messageDiv.innerHTML = `
+                <div class="${sender === 'bot' ? 'bot-message' : ''}">
+                    ${sender === 'bot' ? `<div class="bot-avatar"><img src="{{ url_for('static', filename='jiweijiu.png') }}"alt="AI调酒师头像" width="40" height="40" />
+</div>` : ''}
+                    <div class="message-content">
+                        <p>${text}</p>
+                        ${imageUrl ? `<img src="${imageUrl}" class="chat-image">` : ''}
+                    </div>
+                </div>
+            `;
+            history.appendChild(messageDiv);
+            history.scrollTop = history.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('input');
+            const message = input.value;
+            input.value = '';
+
+            if (message.trim() !== '') {
+                // 用户输入消息后，移除预设问题
+                const presetMessage = document.querySelectorAll('.chat-history .ai-message')[1];
+                if (presetMessage) {
+                    presetMessage.remove();
+                }
+
+                appendMessage('user', message);
+
+                try {
+                    const response = await fetch('/send', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({message: message})
+                    });
+                    
+                    const data = await response.json();
+                    appendMessage('bot', data.response, data.image_url);
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            }
+        }
+    </script>
+</body>
+</html>

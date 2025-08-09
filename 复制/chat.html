@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI调酒师</title>
+    <style>
+        :root {
+            --primary: #FF6B35; /* 橙色 */
+            --background: #0A0A0A; /* 黑色 */
+        }
+        body {
+            background: var(--background);
+            color: var(--primary);
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .chat-container {
+            width: 100%;
+            max-width: 800px;
+            background: #1A1A1A;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+        .chat-header {
+            background: var(--primary);
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .chat-history {
+            height: 60vh;
+            padding: 20px;
+            overflow-y: auto;
+            background: #1A1A1A;
+            color: var(--primary);
+        }
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 8px;
+            background: #1A1A1A;
+        }
+        .user-message {
+            background: #1A1A1A;
+        }
+        .ai-message {
+            background: #1A1A1A;
+            border: 1px solid var(--primary);
+        }
+        .chat-input {
+            display: flex;
+            gap: 10px;
+            padding: 10px;
+            background: #1A1A1A;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            background: #1A1A1A;
+            border: 1px solid #333;
+            color: var(--primary);
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 20px;
+            background: var(--primary);
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .chat-image {
+            max-width: 200px;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">AI调酒师</div>
+        <div class="chat-history" id="history">
+            <!-- 聊天记录动态插入 -->
+        </div>
+        <div class="chat-input">
+            <input type="text" id="input" placeholder="输入你的消息...">
+            <button onclick="sendMessage()">发送</button>
+        </div>
+    </div>
+
+    <script>
+        function appendMessage(sender, text, imageUrl) {
+            const history = document.getElementById('history');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            messageDiv.innerHTML = `
+                <strong>${sender}:</strong>
+                <p>${text}</p>
+                ${imageUrl ? `<img src="${imageUrl}" class="chat-image">` : ''}
+            `;
+            history.appendChild(messageDiv);
+            history.scrollTop = history.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('input');
+            const message = input.value;
+            input.value = '';
+
+            appendMessage('用户', message);
+
+            try {
+                const response = await fetch('/send', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({message: message})
+                });
+                
+                const data = await response.json();
+                appendMessage('AI', data.response, data.image_url);
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+    </script>
+</body>
+</html>
